@@ -1,0 +1,220 @@
+
+import os
+import subprocess
+import tkinter as tk
+from tkinter import ttk, messagebox
+
+APP_NAME = "LightVisuals Client"
+
+BG = "#0b0b12"
+PANEL = "#151522"
+PANEL_ALT = "#1d1d2e"
+PURPLE = "#a855f7"
+CYAN = "#22d3ee"
+TEXT = "#f3f4f6"
+MUTED = "#a1a1aa"
+
+
+class LightVisualsApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title(APP_NAME)
+        self.root.geometry("760x520")
+        self.root.minsize(680, 480)
+        self.root.configure(bg=BG)
+
+        style = ttk.Style()
+        try:
+            style.theme_use("clam")
+        except tk.TclError:
+            pass
+
+        style.configure(
+            "LV.TCombobox",
+            fieldbackground=PANEL_ALT,
+            background=PANEL_ALT,
+            foreground=TEXT,
+            arrowcolor=CYAN
+        )
+
+        self.build_ui()
+
+    def build_ui(self):
+        header = tk.Frame(self.root, bg=BG)
+        header.pack(fill="x", padx=28, pady=(24, 10))
+
+        tk.Label(
+            header, text="LIGHT",
+            font=("Segoe UI", 25, "bold"),
+            fg=CYAN, bg=BG
+        ).pack(side="left")
+
+        tk.Label(
+            header, text="VISUALS",
+            font=("Segoe UI", 25, "bold"),
+            fg=PURPLE, bg=BG
+        ).pack(side="left", padx=7)
+
+        tk.Label(
+            self.root,
+            text="MINECRAFT LAUNCHER STARTER",
+            font=("Segoe UI", 9, "bold"),
+            fg=MUTED, bg=BG
+        ).pack(anchor="w", padx=30, pady=(0, 18))
+
+        card = tk.Frame(
+            self.root, bg=PANEL,
+            highlightbackground="#34344b",
+            highlightthickness=1
+        )
+        card.pack(fill="x", padx=28)
+
+        tk.Label(
+            card, text="ИГРОВАЯ ВЕРСИЯ",
+            font=("Segoe UI", 10, "bold"),
+            fg=TEXT, bg=PANEL
+        ).grid(row=0, column=0, sticky="w",
+               padx=20, pady=(18, 8))
+
+        self.version = tk.StringVar(value="1.21.1")
+        ttk.Combobox(
+            card, textvariable=self.version,
+            state="readonly",
+            values=("1.8.9", "1.16.5", "1.20.1",
+                    "1.21.1", "1.21.11"),
+            style="LV.TCombobox", width=18
+        ).grid(row=1, column=0, sticky="w",
+               padx=20, pady=(0, 18))
+
+        tk.Label(
+            card, text="ПАМЯТЬ (RAM)",
+            font=("Segoe UI", 10, "bold"),
+            fg=TEXT, bg=PANEL
+        ).grid(row=0, column=1, sticky="w",
+               padx=20, pady=(18, 8))
+
+        self.ram = tk.StringVar(value="4 ГБ")
+        ttk.Combobox(
+            card, textvariable=self.ram,
+            state="readonly",
+            values=("2 ГБ", "4 ГБ", "6 ГБ", "8 ГБ"),
+            style="LV.TCombobox", width=18
+        ).grid(row=1, column=1, sticky="w",
+               padx=20, pady=(0, 18))
+
+        card.grid_columnconfigure(0, weight=1)
+        card.grid_columnconfigure(1, weight=1)
+
+        status_card = tk.Frame(
+            self.root, bg=PANEL,
+            highlightbackground="#34344b",
+            highlightthickness=1
+        )
+        status_card.pack(fill="x", padx=28, pady=16)
+
+        tk.Label(
+            status_card, text="СТАТУС",
+            font=("Segoe UI", 9, "bold"),
+            fg=MUTED, bg=PANEL
+        ).pack(anchor="w", padx=18, pady=(14, 4))
+
+        self.status = tk.Label(
+            status_card,
+            text="Готов к запуску официального лаунчера",
+            font=("Segoe UI", 10),
+            fg=CYAN, bg=PANEL
+        )
+        self.status.pack(anchor="w", padx=18, pady=(0, 14))
+
+        buttons = tk.Frame(self.root, bg=BG)
+        buttons.pack(fill="x", padx=28, pady=4)
+
+        tk.Button(
+            buttons,
+            text="ОТКРЫТЬ MINECRAFT LAUNCHER",
+            command=self.open_minecraft,
+            bg=PURPLE, fg=TEXT,
+            activebackground=CYAN,
+            activeforeground=BG,
+            font=("Segoe UI", 10, "bold"),
+            relief="flat", cursor="hand2",
+            padx=16, pady=13
+        ).pack(side="left", fill="x", expand=True, padx=(0, 8))
+
+        tk.Button(
+            buttons, text="О ПРОЕКТЕ",
+            command=self.about,
+            bg=PANEL_ALT, fg=TEXT,
+            activebackground=CYAN,
+            activeforeground=BG,
+            font=("Segoe UI", 10, "bold"),
+            relief="flat", cursor="hand2",
+            padx=16, pady=13
+        ).pack(side="left", padx=(8, 0))
+
+        tk.Label(
+            self.root,
+            text="Стартовый прототип • Официальная авторизация Minecraft",
+            font=("Segoe UI", 9),
+            fg=MUTED, bg=BG
+        ).pack(side="bottom", pady=18)
+
+    def open_minecraft(self):
+        try:
+            os.startfile("minecraft:")
+            self.status.config(
+                text="Запрос на открытие Minecraft Launcher отправлен",
+                fg=CYAN
+            )
+            return
+        except OSError:
+            pass
+
+        paths = [
+            os.path.expandvars(
+                r"%ProgramFiles(x86)%\Minecraft Launcher\MinecraftLauncher.exe"
+            ),
+            os.path.expandvars(
+                r"%ProgramFiles%\Minecraft Launcher\MinecraftLauncher.exe"
+            ),
+            os.path.expandvars(
+                r"%LOCALAPPDATA%\Programs\Minecraft Launcher\MinecraftLauncher.exe"
+            ),
+        ]
+
+        for path in paths:
+            if os.path.isfile(path):
+                try:
+                    subprocess.Popen([path], shell=False)
+                    self.status.config(
+                        text="Minecraft Launcher запущен",
+                        fg=CYAN
+                    )
+                    return
+                except OSError:
+                    continue
+
+        messagebox.showinfo(
+            "Лаунчер не найден",
+            "Не удалось открыть Minecraft Launcher автоматически.\n\n"
+            "Установи официальный Minecraft Launcher и попробуй снова."
+        )
+        self.status.config(
+            text="Открой официальный лаунчер вручную",
+            fg=PURPLE
+        )
+
+    def about(self):
+        messagebox.showinfo(
+            APP_NAME,
+            "LightVisuals Client — стартовый интерфейс лаунчера.\n\n"
+            "Выбор версии и RAM пока демонстрационный.\n"
+            "HUD и игровые моды ещё не реализованы.\n\n"
+            "Вход в Minecraft выполняется через официальный лаунчер."
+        )
+
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = LightVisualsApp(root)
+    root.mainloop()
